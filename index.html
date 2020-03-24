@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Webpack Exploder</title>
+    <meta
+      name="description"
+      content="Unpack the source code of React and other Webpacked Javascript apps!"
+    />
+    <meta name="author" content="spaceraccoon" />
+    <meta property="og:title" content="Webpack Exploder" />
+    <meta
+      property="og:description"
+      content="Unpack the source code of React and other Webpacked Javascript apps!"
+    />
+    <meta property="og:type" content="website" />
+    <meta
+      property="og:url"
+      content="https://spaceraccoon.github.io/webpack-exploder/"
+    />
+    <meta
+      property="og:image"
+      content="https://github.com/spaceraccoon/webpack-exploder/raw/master/screenshot.png"
+    />
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="192x192"
+      href="favicon-192x192.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="512x512"
+      href="favicon-512x512.png"
+    />
+    <link
+      href="https://fonts.googleapis.com/css?family=Press+Start+2P"
+      rel="stylesheet"
+    />
+    <link
+      href="https://unpkg.com/nes.css@latest/css/nes.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://unpkg.com/dialog-polyfill@latest/dist/dialog-polyfill.css"
+    />
+    <script src="https://unpkg.com/source-map@latest/dist/source-map.js"></script>
+    <script>
+      sourceMap.SourceMapConsumer.initialize({
+        "lib/mappings.wasm":
+          "https://unpkg.com/source-map@latest/lib/mappings.wasm"
+      });
+    </script>
+    <script src="https://unpkg.com/jszip@latest/dist/jszip.min.js"></script>
+    <script src="https://unpkg.com/dialog-polyfill@latest/dist/dialog-polyfill.js"></script>
+    <style type="text/css">
+      body {
+        padding: 0 2rem;
+        margin: 0 2rem;
+      }
+
+      .container {
+        max-width: 980px;
+        margin: 0 auto;
+        margin-top: 80px;
+      }
+
+      .nes-container {
+        margin-bottom: 1.5rem !important;
+      }
+
+      #explode-button {
+        width: 100%;
+        margin-bottom: 1.5rem;
+      }
+
+      #progress-bar {
+        margin-bottom: 1.5rem;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <main>
+        <section>
+          <h1>
+            <i class="nes-kirby"></i>
+            <span class="nes-text is-error">Webpack Exploder</span>
+          </h1>
+          <p>
+            Unpack the source code of React and other Webpacked Javascript apps!
+            Check out
+            <a
+              href="https://blog.assetnote.io/bug-bounty/2020/02/01/expanding-attack-surface-react-native/"
+              >Expanding the Attack Surface: React Native Android
+              Applications</a
+            >
+            to learn why. Test this out against some
+            <a
+              href="https://github.com/drgx/react-native-plus-web/tree/master/packages/apps/android/app/src/main/assets"
+              >real samples</a
+            >!
+          </p>
+        </section>
+        <section>
+          <div class="nes-container with-title">
+            <p class="title">Bundle File</p>
+            <label class="nes-btn is-primary">
+              <span>Select</span>
+              <input
+                id="bundle-file"
+                type="file"
+                onchange="handleFiles(this.files, this.id)"
+              />
+            </label>
+            <span id="bundle-file-name"></span>
+          </div>
+        </section>
+        <section>
+          <div class="nes-container with-title">
+            <p class="title">Map File</p>
+            <label class="nes-btn is-primary">
+              <span>Select</span>
+              <input
+                id="map-file"
+                type="file"
+                onchange="handleFiles(this.files, this.id)"
+              />
+            </label>
+            <span id="map-file-name"></span>
+          </div>
+        </section>
+        <section>
+          <button
+            id="explode-button"
+            type="button"
+            class="nes-btn is-error is-disabled"
+            onclick="unpackFiles()"
+          >
+            EXPLODE!
+          </button>
+          <progress
+            style="display: none"
+            id="progress-bar"
+            class="nes-progress is-pattern"
+            value="0"
+            max="100"
+          ></progress>
+        </section>
+        <section class="nes-container">
+          <p class="nes-balloon from-left">
+            Built by <a href="https://github.com/spaceraccoon">Eugene Lim</a> &
+            Styled by
+            <a href="https://github.com/nostalgic-css/NES.css">NES.css</a>
+          </p>
+          <div class="social-buttons">
+            <div class="share">
+              <span>Share: </span
+              ><a
+                href="https://twitter.com/share?url=https://spaceraccoon.github.io/webpack-exploder/&text=Webpack Exploder by @spaceraccoonsec: Unpack the source code of React and other Webpacked Javascript apps!"
+                target="_blank"
+                ><i class="nes-icon twitter"></i
+              ></a>
+              <a
+                href="https://www.facebook.com/sharer.php?u=https://spaceraccoon.github.io/webpack-exploder/&t=Webpack Exploder by @spaceraccoonsec: Unpack the source code of React and other Webpacked Javascript apps!"
+                target="_blank"
+                class="fbc-has-badge fbc-UID_1"
+                ><i class="nes-icon facebook"></i
+              ></a>
+              <a
+                href="https://www.linkedin.com/shareArticle?url=https://spaceraccoon.github.io/webpack-exploder/&title=Webpack Exploder by @spaceraccoonsec: Unpack the source code of React and other Webpacked Javascript apps!"
+                target="_blank"
+                ><i class="nes-icon linkedin"></i
+              ></a>
+              <a
+                href="https://github.com/spaceraccoon/webpack-exploder/"
+                target="_blank"
+                ><i class="nes-icon github"></i
+              ></a>
+            </div>
+          </div>
+        </section>
+        <dialog class="nes-dialog" id="dialog-error">
+          <form method="dialog">
+            <p class="title">Error!</p>
+            <p>Exploding failed. Did you use the right files?</p>
+            <menu class="dialog-menu">
+              <button class="nes-btn">Close</button>
+            </menu>
+          </form>
+        </dialog>
+      </main>
+    </div>
+    <script>
+      dialogPolyfill.registerDialog(document.querySelector("dialog"));
+
+      let jsFiles = {
+        "bundle-file": null,
+        "map-file": null
+      };
+      let download = document.createElement("a");
+
+      function handleFiles(files, id) {
+        jsFiles[id] = files[0];
+        document.getElementById(`${id}-name`).textContent = jsFiles[id].name;
+
+        if (Object.values(jsFiles).every(e => e !== null)) {
+          document
+            .getElementById("explode-button")
+            .classList.remove("is-disabled");
+        } else {
+          document
+            .getElementById("explode-button")
+            .classList.add("is-disabled");
+        }
+      }
+
+      function resetProgress() {
+        document.getElementById("explode-button").style.display =
+          "inline-block";
+        document.getElementById("progress-bar").style.display = "none";
+        document.getElementById("progress-bar").value = "0";
+      }
+
+      function unpackFiles() {
+        document.getElementById("explode-button").style.display = "none";
+        document.getElementById("progress-bar").style.display = "inline-block";
+        let reader = new FileReader();
+        let zip = new JSZip();
+        reader.onload = async function(e) {
+          try {
+            await sourceMap.SourceMapConsumer.with(
+              e.target.result,
+              null,
+              async function(consumer) {
+                consumer.sources.forEach(source => {
+                  const content = consumer.sourceContentFor(source);
+                  zip.file(
+                    source.replace(/^\/|\/$/g, ""),
+                    consumer.sourceContentFor(source)
+                  );
+                });
+                zip
+                  .generateAsync({ type: "blob" }, function updateCallback(
+                    metadata
+                  ) {
+                    document.getElementById(
+                      "progress-bar"
+                    ).value = metadata.percent.toFixed(2);
+                  })
+                  .then(function(content) {
+                    download.download = "output.zip";
+                    download.href = URL.createObjectURL(content);
+                    download.click();
+                    resetProgress();
+                  });
+                return;
+              }
+            );
+          } catch {
+            document.querySelector("dialog").showModal();
+            resetProgress();
+          }
+        };
+        reader.readAsText(jsFiles["map-file"]);
+      }
+    </script>
+  </body>
+</html>
