@@ -176,7 +176,7 @@
         <dialog class="nes-dialog" id="dialog-error">
           <form method="dialog">
             <p class="title">Error!</p>
-            <p>Exploding failed. Did you use the right files?</p>
+            <p>Exploding failed. Did you use the right file?</p>
             <menu class="dialog-menu">
               <button class="nes-btn">Close</button>
             </menu>
@@ -187,17 +187,14 @@
     <script>
       dialogPolyfill.registerDialog(document.querySelector("dialog"));
 
-      let jsFiles = {
-        "bundle-file": null,
-        "map-file": null
-      };
+      let mapFile = null;
       let download = document.createElement("a");
 
       function handleFiles(files, id) {
-        jsFiles[id] = files[0];
-        document.getElementById(`${id}-name`).textContent = jsFiles[id].name;
+        mapFile = files[0];
+        document.getElementById("map-file-name").textContent = mapFile.name;
 
-        if (Object.values(jsFiles).every(e => e !== null)) {
+        if (mapFile !== null) {
           document
             .getElementById("explode-button")
             .classList.remove("is-disabled");
@@ -211,55 +208,62 @@
       function resetProgress() {
         document.getElementById("explode-button").style.display =
           "inline-block";
+        document
+          .getElementById("explode-button")
+          .classList.add("is-disabled");
         document.getElementById("progress-bar").style.display = "none";
         document.getElementById("progress-bar").value = "0";
+        document.getElementById("map-file-name").textContent = "";
+        mapFile = null;
       }
 
       function unpackFiles() {
-        document.getElementById("explode-button").style.display = "none";
-        document.getElementById("progress-bar").style.display = "inline-block";
-        let reader = new FileReader();
-        let zip = new JSZip();
-        reader.onload = async function(e) {
-          try {
-            await sourceMap.SourceMapConsumer.with(
-              e.target.result,
-              null,
-              async function(consumer) {
-                consumer.sources.forEach(source => {
-                  const content = consumer.sourceContentFor(source);
-                  zip.file(
-                    source.replace(/^\/|\/$/g, ""),
-                    consumer.sourceContentFor(source)
-                  );
-                });
-                zip
-                  .generateAsync({ type: "blob" }, function updateCallback(
-                    metadata
-                  ) {
-                    document.getElementById(
-                      "progress-bar"
-                    ).value = metadata.percent.toFixed(2);
-                  })
-                  .then(function(content) {
-                    download.download = "output.zip";
-                    download.href = URL.createObjectURL(content);
-                    download.click();
-                    resetProgress();
+        if (mapFile !== null) {
+          document.getElementById("explode-button").style.display = "none";
+          document.getElementById("progress-bar").style.display = "inline-block";
+          let reader = new FileReader();
+          let zip = new JSZip();
+          reader.onload = async function(e) {
+            try {
+              await sourceMap.SourceMapConsumer.with(
+                e.target.result,
+                null,
+                async function(consumer) {
+                  consumer.sources.forEach(source => {
+                    const content = consumer.sourceContentFor(source);
+                    zip.file(
+                      source.replace(/^\/|\/$/g, ""),
+                      consumer.sourceContentFor(source)
+                    );
                   });
-                return;
-              }
-            );
+                  zip
+                    .generateAsync({ type: "blob" }, function updateCallback(
+                      metadata
+                    ) {
+                      document.getElementById(
+                        "progress-bar"
+                      ).value = metadata.percent.toFixed(2);
+                    })
+                    .then(function(content) {
+                      download.download = "output.zip";
+                      download.href = URL.createObjectURL(content);
+                      download.click();
+                      resetProgress();
+                    });
+                  return;
+                }
+              );
+            } catch {
+              document.querySelector("dialog").showModal();
+              resetProgress();
+            }
+          };
+          try {
+            reader.readAsText(mapFile);
           } catch {
             document.querySelector("dialog").showModal();
             resetProgress();
           }
-        };
-        try {
-          reader.readAsText(jsFiles["map-file"]);
-        } catch {
-          document.querySelector("dialog").showModal();
-          resetProgress();
         }
       }
     </script>
