@@ -118,6 +118,7 @@
                 id="map-file"
                 type="file"
                 onchange="handleFiles(this.files, this.id)"
+                multiple
               />
             </label>
             <span id="map-file-name"></span>
@@ -176,7 +177,8 @@
         <dialog class="nes-dialog" id="dialog-error">
           <form method="dialog">
             <p class="title">Error!</p>
-            <p>Exploding failed. Did you use the right file?</p>
+            <p>Exploding failed in '<span id="error-file-name"></span>'.</p>
+            <p>Did you use the right file?</p>
             <menu class="dialog-menu">
               <button class="nes-btn">Close</button>
             </menu>
@@ -187,14 +189,17 @@
     <script>
       dialogPolyfill.registerDialog(document.querySelector("dialog"));
 
-      let mapFile = null;
+      let mapFiles = null;
       let download = document.createElement("a");
 
       function handleFiles(files, id) {
-        mapFile = files[0];
-        document.getElementById("map-file-name").textContent = mapFile.name;
-
-        if (mapFile !== null) {
+        mapFiles = [...files];
+        previewName = mapFiles[0].name;
+        if (files.length > 1) {
+          previewName += ` & ${files.length - 1} others`
+        }
+        document.getElementById("map-file-name").textContent = previewName
+        if (mapFiles !== null) {
           document
             .getElementById("explode-button")
             .classList.remove("is-disabled");
@@ -214,56 +219,69 @@
         document.getElementById("progress-bar").style.display = "none";
         document.getElementById("progress-bar").value = "0";
         document.getElementById("map-file-name").textContent = "";
-        mapFile = null;
+        mapFiles = null;
       }
 
-      function unpackFiles() {
-        if (mapFile !== null) {
-          document.getElementById("explode-button").style.display = "none";
-          document.getElementById("progress-bar").style.display = "inline-block";
+      function unpackFile(mapFile) {
+        return new Promise((resolve, reject) => {
           let reader = new FileReader();
-          let zip = new JSZip();
-          reader.onload = async function(e) {
+          reader.onerror = reject;
+          reader.onload = (e) => {
             try {
-              await sourceMap.SourceMapConsumer.with(
+              sourceMap.SourceMapConsumer.with(
                 e.target.result,
                 null,
                 async function(consumer) {
-                  consumer.sources.forEach(source => {
+                  resolve(consumer.sources.map((source) => {
                     const content = consumer.sourceContentFor(source);
-                    zip.file(
-                      source.replace(/^\/|\/$/g, ""),
-                      consumer.sourceContentFor(source)
-                    );
-                  });
-                  zip
-                    .generateAsync({ type: "blob" }, function updateCallback(
-                      metadata
-                    ) {
-                      document.getElementById(
-                        "progress-bar"
-                      ).value = metadata.percent.toFixed(2);
-                    })
-                    .then(function(content) {
-                      download.download = "output.zip";
-                      download.href = URL.createObjectURL(content);
-                      download.click();
-                      resetProgress();
-                    });
-                  return;
+                    return {
+                      "path": source.replace(/^\/|\/$/g, ""),
+                      "source": consumer.sourceContentFor(source)
+                    }
+                  }))
                 }
-              );
-            } catch {
-              document.querySelector("dialog").showModal();
-              resetProgress();
+              )
+            } catch (err) {
+              err.mapFile = mapFile.name;
+              reject(err);
             }
-          };
-          try {
-            reader.readAsText(mapFile);
-          } catch {
+          }
+          reader.readAsText(mapFile);
+        })
+      }
+
+      function unpackFiles() {
+        if (mapFiles !== null) {
+          document.getElementById("explode-button").style.display = "none";
+          document.getElementById("progress-bar").style.display = "inline-block";
+          let unpackedPromises = mapFiles.map(
+            file => unpackFile(file)
+          );
+          Promise.all(unpackedPromises).then((res) => {
+            let zip = new JSZip();
+            for (let file of res.flat()) {
+              zip.file(
+                file["path"],
+                file["source"]
+              );
+            }
+            zip.generateAsync({ type: "blob" }, function updateCallback(metadata) {
+              document.getElementById(
+                "progress-bar"
+              ).value = metadata.percent.toFixed(2);
+            }).then(function(content) {
+              download.download = "output.zip";
+              download.href = URL.createObjectURL(content);
+              download.click();
+              resetProgress();
+            });
+          }).catch((err) => {
+            if (err.mapFile != null) {
+              document.getElementById("error-file-name").textContent = err.mapFile;
+            }
             document.querySelector("dialog").showModal();
             resetProgress();
-          }
+          })
         }
       }
     </script>
