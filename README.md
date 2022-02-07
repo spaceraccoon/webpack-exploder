@@ -4,3 +4,9 @@ Unpack the source code of React and other Webpacked Javascript apps! Check out [
 [Webpage](https://spaceraccoon.github.io/webpack-exploder/)
 
 ![Recording](https://github.com/spaceraccoon/webpack-exploder/raw/master/recording.gif)
+
+## Contributing
+
+Contributions are welcome!
+
+- Multiple map files added by [Ge0rg3](https://github.com/Ge0rg3)
